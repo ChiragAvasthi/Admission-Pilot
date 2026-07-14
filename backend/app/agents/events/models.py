@@ -39,3 +39,24 @@ class WorkflowCompleted(BaseEvent):
 
 class ContextUpdated(BaseEvent):
     updates: Dict[str, Any]
+
+class AgentStarted(BaseEvent):
+    agent_name: str
+    task_id: str
+
+class AgentCompleted(BaseEvent):
+    agent_name: str
+    task_id: str
+
+class AgentFailed(BaseEvent):
+    agent_name: str
+    task_id: str
+    error: str
+
+class RevisionRequested(BaseEvent):
+    task_id: str
+    reason: str
+
+class ReportGenerated(BaseEvent):
+    report_id: str
+    summary: str
