@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from datetime import datetime, timezone
 import uuid
 
@@ -27,7 +27,7 @@ class TaskFailed(BaseEvent):
 class AgentRegistered(BaseEvent):
     agent_id: str
     agent_name: str
-    capabilities: list[str]
+    capabilities: List[str]
 
 class WorkflowStarted(BaseEvent):
     workflow_id: str
