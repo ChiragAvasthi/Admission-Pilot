@@ -1,23 +1,24 @@
-# Build stage
-FROM node:18-alpine as build
+# Stage 1: Build
+FROM node:20-alpine as builder
+
 WORKDIR /app
 
-# Install dependencies
-COPY package.json package-lock.json* ./
-RUN npm install
+COPY package*.json ./
+RUN npm ci
 
-# Copy source code and build
 COPY . .
+# Build the Vite application
 RUN npm run build
 
-# Serve stage (Production)
-# For local dev via docker-compose, we override the command to run `npm run dev`
-FROM node:18-alpine
+# Stage 2: Production server (Nginx)
+FROM nginx:alpine
 
-WORKDIR /app
-COPY --from=build /app /app
+# Copy built assets from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-EXPOSE 3000
+# Add custom nginx config for React Router fallback
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Default to dev server for local docker-compose
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

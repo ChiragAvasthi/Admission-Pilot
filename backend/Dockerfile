@@ -1,27 +1,34 @@
-FROM python:3.10-slim
-
-# Prevent Python from writing pyc files to disc
-ENV PYTHONDONTWRITEBYTECODE 1
-# Prevent Python from buffering stdout and stderr
-ENV PYTHONUNBUFFERED 1
+# Stage 1: Build
+FROM python:3.11-slim as builder
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# Copy project
+# Stage 2: Production
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy dependencies
+COPY --from=builder /install /usr/local
+
+# Copy application code
 COPY . .
 
-# Expose port
+# Create data directories
+RUN mkdir -p /app/data /app/company_workspaces /app/logs
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
 EXPOSE 8000
 
-# Start command
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

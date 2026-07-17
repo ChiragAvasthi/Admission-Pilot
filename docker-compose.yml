@@ -8,42 +8,38 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-      - ./backend/logs:/app/logs
-      - ./backend/uploads:/app/uploads
-      - ./backend/company_workspaces:/app/company_workspaces
+      - backend_data:/app/data
+      - ./company_workspaces:/app/company_workspaces
+    env_file:
+      - .env.production
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/admission_pilot
-    depends_on:
-      - db
-    restart: unless-stopped
+      # Override paths for docker
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/admission_pilot.db
+      - CHROMADB_DIR=/app/data/chroma_db
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - VITE_API_URL=http://localhost:8000
+      - "80:80"
     depends_on:
       - backend
-    restart: unless-stopped
-
-  db:
-    image: postgres:15-alpine
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=admission_pilot
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
-  postgres_data:
+  backend_data:
