@@ -33,6 +33,8 @@ classDiagram
         +Text description
         +DateTime created_at
         +DateTime updated_at
+        +create(org_in) Organization
+        +list_all() List~Organization~
     }
 
     class Project {
@@ -44,6 +46,8 @@ classDiagram
         +String status
         +DateTime created_at
         +DateTime updated_at
+        +create(project_in) Project
+        +list_by_org(organization_id) List~Project~
     }
 
     class Upload {
@@ -55,6 +59,8 @@ classDiagram
         +String status
         +DateTime created_at
         +DateTime updated_at
+        +upload_file(project_id, file) Upload
+        +list_by_project(project_id) List~Upload~
     }
 
     class Execution {
@@ -66,6 +72,9 @@ classDiagram
         +DateTime created_at
         +DateTime updated_at
         +DateTime completed_at
+        +start(project_id) Execution
+        +get_by_id(execution_id) Execution
+        +update_status(status) void
     }
 
     class Report {
@@ -75,18 +84,20 @@ classDiagram
         +String title
         +Text content
         +DateTime created_at
+        +list_by_project(project_id) List~Report~
+        +get_by_id(report_id) Report
     }
 
     class ExecutionManager {
-        +run_execution_workflow(execution_id, project_id)
-        +broadcast_update()
+        +run_execution_workflow(execution_id, project_id) void
+        +broadcast_update(execution_id, payload) void
     }
 
-    Organization "1" -- "*" Project : has >
-    Project "1" -- "*" Upload : contains >
-    Project "1" -- "*" Execution : runs >
-    Execution "1" -- "1" Report : generates >
-    
+    Organization "1" -- "*" Project : has
+    Project "1" -- "*" Upload : contains
+    Project "1" -- "*" Execution : runs
+    Execution "1" -- "1" Report : generates
+
     ExecutionManager ..> Execution : manages
     ExecutionManager ..> Report : creates
 ```
